@@ -59,6 +59,7 @@ The python script shows how to use the api, it retrieves some data
 (like neighbors, positions), and sends robot 0, and target 0 to random
 points. You should see an output like this one:
 
+```
 init_done
 ====================
 retrieving direct neighbors of 0
@@ -89,7 +90,7 @@ robot 0 has not reached wp: dist  3.27477239585
 robot 0 has not reached wp: dist  3.02486624604
 ....
 ....
-
+```
 
 you can see that robot 0 is moving because the distance to the
 waypoint is decreasing.
