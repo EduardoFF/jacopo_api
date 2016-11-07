@@ -1,6 +1,4 @@
-#
-
-# create docker images
+# Create docker images
 
 ## Build RoboNetSim image
 ```
