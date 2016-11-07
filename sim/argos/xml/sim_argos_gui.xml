@@ -1,0 +1,177 @@
+<?xml version="1.0" ?>
+<argos-configuration>
+
+  <!-- ************************* -->
+  <!-- * General configuration * -->
+  <!-- ************************* -->
+  <framework>
+    <system threads="0" />
+    <experiment length="PAR_SIMLEN"
+                ticks_per_second="10"
+                random_seed="PAR_RANDOMSEED" />
+  </framework>
+
+  <!-- *************** -->
+  <!-- * Controllers * -->
+  <!-- *************** -->
+  <controllers>
+    <footbot_central_controller id="fcentral"
+      library="controllers/footbot_central/libfootbot_central_controller.so" >
+      <actuators>
+	<footbot_wheels implementation="default" />
+	<footbot_leds   implementation="default" />
+	<footbot_beacon   implementation="default" />
+	<!--<wifi implementation="default" />-->
+      </actuators>
+      <sensors>
+	<footbot_proximity implementation="rot_z_only" show_rays="false" calibrate="true" />
+      </sensors>
+      <parameters>
+      </parameters>
+    </footbot_central_controller>
+
+    <footbot_jacopo_api id="fapi" 
+	library="controllers/jacopo_api/libfootbot_jacopo_api.so">
+      <actuators>
+	<wifi implementation="default" range="2.0" probability="1.0"/>
+	<footbot_wheels implementation="default" />
+	<footbot_leds   implementation="default" />
+	<footbot_beacon   implementation="default" />
+      </actuators>
+
+      <sensors>
+	<wifi implementation="default" />
+	<footbot_proximity implementation="rot_z_only" show_rays="true" calibrate="true" />
+	<footbot_encoder implementation="default"/>
+      </sensors>
+
+      <parameters>
+	<mobilitycontrol mode="LCM" />
+	
+	<optimalSpeed>0.06</optimalSpeed>
+	<safetyMargin>0.1</safetyMargin>
+	<socialMargin>0.05</socialMargin>
+	<resolution>201</resolution>
+	<horizon>2</horizon>
+	<timeHorizon>5.0</timeHorizon>
+	<aperture>3.2</aperture>
+	<tau>0.125</tau>
+	<eta>0.5</eta>
+	<local_navigation type="HL" NH="true"/>
+	<rotationTau>0.5</rotationTau>
+
+	
+	<mobility rotation_max_speed='0.1' continuous='false'/>
+	<rab min_particle_separation="0.4" particle_age="5.0"
+	     min_particle_confidence="0.1"/>
+	<!-- Min distance from the current position to the target position to determine it this is reached (meters)-->
+	<targetMinPointDistance>0.12</targetMinPointDistance>
+	<!-- Area bounds -->
+	<originAreaX>0.0</originAreaX>
+	<originAreaY>0.0</originAreaY>
+	<destinationAreaX>20.0</destinationAreaX>
+	<destinationAreaY>20.0</destinationAreaY>
+      </parameters>
+
+      </footbot_jacopo_api>
+      
+  </controllers>
+
+
+
+
+  <!-- *********************** -->
+  <!-- * Arena configuration * -->
+  <!-- *********************** -->
+  <arena size="10, 10, 1">
+
+   <box id="wall_north"
+	 position="25,50,0"
+	 orientation="0,0,0"
+	 size="50,0.1,0.5"
+	 movable="false" />
+    <box id="wall_south"
+	 position="25,0,0"
+	 orientation="0,0,0"
+	 size="50,0.1,0.5"
+	 movable="false" />
+    <box id="wall_east"
+	 position="50,25,0"
+	 orientation="0,0,0"
+	 size="0.1,50,0.5"
+	 movable="false" />
+    <box id="wall_west"
+	 position="0,25,0"
+	 orientation="0,0,0"
+	 size="0.1,50,0.5"
+	 movable="false" />
+
+    <!--
+        You can distribute entities randomly. Here, we distribute
+        the entities in this way:
+        - the position is uniformly distributed
+        on the ground, in the square whose corners are (-1,-1) and (1,1)
+        - the orientations are non-zero only when rotating around Z and chosen
+        from a gaussian distribution, whose mean is zero degrees and
+        standard deviation is 360 degrees.
+    -->
+
+	<!-- all robots, except 0, are sensors,
+	sensors move slowly and generate data
+	-->
+    <foot-bot id="fb_0"
+	      position="-3,-3,0"
+	      orientation="1,1,0"
+	      wifi_enabled="false"
+	      controller="fcentral" />
+
+    <distribute>
+      <position method="uniform" min="1,1,0" max="9,9,0" />
+      <orientation method="gaussian" mean="0,0,0" std_dev="360,0,0" />
+      <entity quantity="PAR_NROBOTS" max_trials="100" base_num="1" >
+        <foot-bot id="fb"
+		  controller="fapi" />
+      </entity>
+    </distribute>
+  </arena>
+
+  <!-- ******************* -->
+  <!-- * Physics engines * -->
+  <!-- ******************* -->
+  <physics_engines>
+    <dynamics2d id="dyn2d" />
+  </physics_engines>
+
+  <!-- ************************************ -->
+  <!-- * Arena -> Physics Engines mapping * -->
+  <!-- ************************************ -->
+  <arena_physics>
+    <engine id="dyn2d">
+      <!--
+          You can use a regular expression to bind a set of entities.
+          See 'man 3 regex' to know more about regular expressions.
+      -->
+      <entity id="fb_[[:digit:]]*" />
+      <entity id="wall_north" />
+      <entity id="wall_south" />
+      <entity id="wall_east" />
+      <entity id="wall_west" />
+    </engine>
+  </arena_physics>
+
+  <!-- ****************** -->
+  <!-- * Visualization * -->
+  <!-- ****************** -->
+  <visualization>
+    <qtopengl_render splash="false">
+	<camera>
+		<placement idx="0" position="0,0,1" look_at="0,0,0" />
+		<placement idx="1" position="5,0,1" look_at="5,0,0" />
+		<placement idx="2" position="0,5,1" look_at="0,5,0" />
+		<placement idx="3" position="5,5,1" look_at="5,5,0" />
+	</camera>
+    </qtopengl_render>  
+
+  </visualization>
+
+</argos-configuration>
