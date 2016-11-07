@@ -2,17 +2,17 @@
 
 # create docker images
 
-## Core RoboNetSim docker image
+## Build RoboNetSim image
 ```
 git clone https://github.com/EduardoFF/RoboNetSim.git
 cd RoboNetSim
 docker build -t robonetsim/argos .
 ```
 
-## the image with the API controllers
+## Build image with the API controllers
 
 ```
-cd sim
+cd ../sim
 docker build -t argos_sim .
 ```
 
@@ -25,7 +25,9 @@ bash run_sim.sh argos_sim bash launch_argos.sh SIMTIME NUMBER_OF_ROBOTS SEED
 
 where:
 SIMTIME: simulation time in seconds
+
 NUMBER_OF_ROBOTS: number of robots in the simulation
+
 SEED: integer, random seed
 
-if 
+ 
