@@ -154,9 +154,12 @@ class RealWoldInterface():
 
     ###################
     #COMMANDS
+    # speed in meter per second
+    # max value is 0.3, if <= 0, then it is ignore
+    # if None, it uses the default speed
     ###################
 
-    def robot_go_to(self, rid,x,y):
+    def robot_go_to(self, rid,x,y,speed=None):
         """
             The robot must move to position (x,y)
         """
@@ -165,7 +168,10 @@ class RealWoldInterface():
             msg = config_msg()
             msg.robotid = fid
             msg.timestamp = 0
-            msg.msg ="FORCE_POS %.2f %.2f 0"%(x,y)
+            if speed:
+                msg.msg ="FORCE_POS_VEL %.2f %.2f 0 %.2f"%(x,y,speed)
+            else:
+                msg.msg ="FORCE_POS %.2f %.2f 0"%(x,y)
             self.lcm.publish("CONFIG", msg.encode())
         else:
             print "invalid robot id"
@@ -199,9 +205,12 @@ class RealWoldInterface():
 
     ###################
     #COMMANDS
+    # speed in meter per second
+    # max value is 0.3, if <= 0, then it is ignore
+    # if None, it uses the default speed
     ###################
 
-    def target_go_to(self, rid,x,y):
+    def target_go_to(self, rid,x,y, speed=None):
         """
             The target must move to position (x,y)
         """
@@ -210,7 +219,10 @@ class RealWoldInterface():
             msg = config_msg()
             msg.robotid = fid
             msg.timestamp = 0
-            msg.msg ="FORCE_POS %.2f %.2f 0"%(x,y)
+            if speed:
+                msg.msg ="FORCE_POS_VEL %.2f %.2f 0 %.2f"%(x,y,speed)
+            else:
+                msg.msg ="FORCE_POS %.2f %.2f 0"%(x,y)                
             self.lcm.publish("CONFIG", msg.encode())
         else:
             print "invalid target id"
