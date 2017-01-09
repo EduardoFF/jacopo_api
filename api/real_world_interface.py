@@ -25,6 +25,9 @@ class RealWoldInterface():
         self.target_to_fb = {}
         self.all_fbs=set()
         self.fb_pos = {}
+        self.fb_to_target = {}
+        self.fb_to_robot = {}
+        
         self.lcm = lcm.LCM()
         self.subscription = self.lcm.subscribe("API", self.my_handler)
         self.done = False
@@ -57,19 +60,23 @@ class RealWoldInterface():
         s = msg.msg.split()
         if not len(s):
             return
-        rid = int(msg.robotid)
-        if rid not in self.all_fbs:
+        fid = int(msg.robotid)
+        if fid not in self.all_fbs:
             return
         if s[0] == 'POS':
             x=float(s[1])
             y=float(s[2])
             if self.verbose:
-                print "set position of ",rid," to ",x,y
-            self.fb_pos[rid] = (float(s[1]), float(s[2]))
+                print "set position of ",fid," to ",x,y
+            self.fb_pos[fid] = (float(s[1]), float(s[2]))
         if s[0] == 'NTABLE':
-            self.neighbors[rid]=dict()
-            for i in range(2,len(s),2):
-                self.neighbors[rid][int(s[i])] = int(s[i+1])
+            if fid in self.fb_to_robot:
+                rid = self.fb_to_robot[fid]
+                self.neighbors[rid]=dict()
+                for i in range(2,len(s),2):
+                    if int(s[i]) in self.fb_to_robot:
+                        nid = self.fb_to_robot[int(s[i])]
+                        self.neighbors[rid][nid] = int(s[i+1])
             
 
 
@@ -83,9 +90,12 @@ class RealWoldInterface():
             t = s.attributes['type'].value
             if t == 'target':
                 self.target_to_fb[n_targets]=rid
+                self.fb_to_target[rid] = n_targets
                 n_targets+=1
+
             elif t == 'robot':
                 self.robot_to_fb[n_robots]=rid
+                self.fb_to_robot[rid]=n_robots
                 n_robots+=1
             else:
                 print "Invalid type ",t
@@ -112,11 +122,10 @@ class RealWoldInterface():
 
     def get_direct_neighbors(self, rid):
         if rid in self.robot_to_fb:
-            fid = self.robot_to_fb[rid]
-            if fid not in self.neighbors:
+            if rid not in self.neighbors:
                 return []
             else:
-                return [n for (n,d) in self.neighbors[fid].items() if d == 1]
+                return [n for (n,d) in self.neighbors[rid].items() if d == 1]
         else:
             print "invalid robot id"
             return []
@@ -128,11 +137,10 @@ class RealWoldInterface():
 
     def get_multihop_neighbors(self, rid):
         if rid in self.robot_to_fb:
-            fid = self.robot_to_fb[rid]
-            if fid not in self.neighbors:
+            if rid not in self.neighbors:
                 return []
             else:
-                return [n for (n,d) in self.neighbors[fid].items() if d > 1]
+                return [n for (n,d) in self.neighbors[rid].items() if d > 1]
         else:
             print "invalid robot id"
             return []
