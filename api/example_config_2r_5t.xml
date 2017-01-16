@@ -1,0 +1,11 @@
+<data>
+  <items>
+    <robot robotid="1" type="robot"/>
+    <robot robotid="2" type="robot"/>
+    <robot robotid="3" type="target"/>
+    <robot robotid="4" type="target"/>
+    <robot robotid="5" type="target"/>
+    <robot robotid="6" type="target"/>
+    <robot robotid="7" type="target"/>
+    </items>
+</data>
