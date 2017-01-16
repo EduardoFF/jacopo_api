@@ -94,6 +94,7 @@ class FootbotJacopoAPI: public CCI_Controller
     void makeMsg();
     #endif
     string makeNeighborPacket();
+    void checkNeighbors();
     string makeHelloPacket();
   public:
 

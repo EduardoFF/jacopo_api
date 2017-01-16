@@ -44,7 +44,10 @@ class RealWoldInterface():
         self.tid.start()
     def join(self):
         self.tid.join()
-            
+    def robots(self):
+        return self.robot_to_fb.keys()
+    def targets(self):
+        return self.target_to_fb.keys()
     def handler(self):
         while True:
             self.lcm.handle_timeout(1000)

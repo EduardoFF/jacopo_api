@@ -47,7 +47,7 @@ FootbotJacopoAPI::FootbotJacopoAPI() :
   RandomSeed(12345),
   m_Steps(0),
   m_randomGen(0),
-  m_maxCounter(20)
+  m_maxCounter(3)
 {
   m_started = false;
 }
@@ -463,6 +463,7 @@ FootbotJacopoAPI::ControlStep()
     {
       notifyPosition();
       notifyNeighbors();
+      checkNeighbors();
     }
     
 
@@ -492,6 +493,18 @@ FootbotJacopoAPI::notifyNeighbors()
   msg.timestamp = getTime();
   msg.msg = makeNeighborPacket();
   m_configHandler->publishMessage("API",m_myID, msg);
+}
+
+void
+FootbotJacopoAPI::checkNeighbors()
+{
+  FOREACH(it, m_neighborTable)
+    {
+      if( (it->second).counter > 0 )
+	{
+	  (it->second).counter--;
+	}
+    }
 }
 
 
