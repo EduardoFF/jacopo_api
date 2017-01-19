@@ -27,8 +27,9 @@ class RealWoldInterface():
         self.fb_pos = {}
         self.fb_to_target = {}
         self.fb_to_robot = {}
-        
-        self.lcm = lcm.LCM()
+
+        self.lcm = lcm.LCM("udpm://239.255.76.67:7667?ttl=1") 
+#        self.lcm = lcm.LCM()
         self.subscription = self.lcm.subscribe("API", self.my_handler)
         self.done = False
         self.configureScenario(config_file)

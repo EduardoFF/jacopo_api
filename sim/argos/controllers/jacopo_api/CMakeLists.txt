@@ -33,8 +33,8 @@ if( ARGOS_COMPILE_REAL_SWARMANOID )
     argos2_common_control_interface 
     argos2_common_utility
     lcm
-    Timer
     navigation
+    config_lcm_handler
     )
 
 else( ARGOS_COMPILE_REAL_SWARMANOID )

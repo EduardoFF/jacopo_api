@@ -7,7 +7,7 @@
 #include <argos2/simulator/simulator.h>
 #endif
 
-#define __USE_DEBUG_COMM 0
+#define __USE_DEBUG_COMM 1
 #define __USE_DEBUG_ERROR 1
 
 
@@ -49,6 +49,7 @@ FootbotJacopoAPI::FootbotJacopoAPI() :
   m_randomGen(0),
   m_maxCounter(3)
 {
+  m_networkEnabled = false;
   m_started = false;
 }
 
@@ -95,6 +96,10 @@ FootbotJacopoAPI::initComm( TConfigurationNode& t_tree )
   //! get configuration parameters
   if (NodeExists(t_tree, "comm")) 
   {
+    TConfigurationNode t_node = GetNode(t_tree, "comm");
+    GetNodeAttributeOrDefault(t_node,
+			      "enabled", m_networkEnabled, m_networkEnabled);
+    
   } 
   else
   {
@@ -211,13 +216,12 @@ FootbotJacopoAPI::sendTimerFired()
   string msg = makeNeighborPacket();
   sendPacket(msg);
 #else
-    makeMsg();
+  string msg = makeNeighborPacket();
+  sprintf(m_socketMsg, "%s", msg.c_str());
   m_sentPackets++;
   size_t len = strlen(m_socketMsg);
   DEBUGCOMM("Sending packet %d (len %zu) @ %llu\n", 
 	    m_sentPackets, len, getTime());
-
-  
   sendPacket(m_socketMsg, len);
   #endif
 }
@@ -322,10 +326,33 @@ FootbotJacopoAPI::randomWaypoint()
 void
 FootbotJacopoAPI::processConfig(std::string msg)
 {
+  std::stringstream ss(msg);
+  std::string cmd;
+  ss >> cmd;
+  printf("Got cmd %s\n", msg.c_str());
+  fflush(stdout);
+
   /// pass it entirely to nav client
+  if( cmd == "START" )
+    start();
+  if( cmd == "STOP" )
+    stop();
+
   m_navClient->processConfig(msg);
 }
 
+void
+FootbotJacopoAPI::stop()
+{
+  if( !m_started )
+    return;
+  printf("*************** STOPPING *************\n");
+  fflush(stdout);
+
+  m_started = false;
+  m_navClient->stop();
+
+}
 
 void
 FootbotJacopoAPI::setNeighborDistance(UInt8 nid, UInt8 nh)
@@ -362,7 +389,7 @@ FootbotJacopoAPI::processHello(std::string &msg)
     }
 }
 
-void
+bool
 FootbotJacopoAPI::processPacket(std::string &msg)
 {
   std::istringstream is(msg.c_str());
@@ -372,6 +399,8 @@ FootbotJacopoAPI::processPacket(std::string &msg)
     {
       int rid;
       is >> rid;
+      if( rid == m_myID )
+	return false;
       DEBUGCOMM("Got neighbor %d\n", rid);
       setNeighborDistance(rid, 1);
       resetNeighborCounter(rid);
@@ -398,7 +427,9 @@ FootbotJacopoAPI::processPacket(std::string &msg)
   else
     {
       DEBUGCOMM("Rejected Invalid Packet %s\n", cmd.c_str());
+      return false;
     }
+  return true;
 }
 
 
@@ -408,16 +439,16 @@ FootbotJacopoAPI::ControlStep()
   m_Steps+=1;
 
   // start after 1 second
-  if( m_Steps == 10 )
-    start();
+  //  if( m_Steps == 30 )
+  //  start();
   
   /// BUG WARNING - we must pop everything
   for(;;)
     {
       std::pair< bool, TimestampedConfigMsg> c_msg =
 	m_configHandler->popNextConfigMsg(m_myID, getTime());
-      //printf("RobotId %d ControlStep %lld - config msgs? %d\n",
-      //	 m_myID, m_Steps, c_msg.first);
+      printf("RobotId %d ControlStep %lld - config msgs? %d\n",
+	     m_myID, m_Steps, c_msg.first);
       if( c_msg.first )
 	{
 	  //    cout << "robot " << m_myID <<  " time "
@@ -455,7 +486,7 @@ FootbotJacopoAPI::ControlStep()
   m_navClient->update();
 
   /// send HELLO messages each second
-  if( m_myID%10 == m_Steps%10)
+  if( m_myID%10 == m_Steps%10 && m_networkEnabled)
     sendTimerFired();
 
   /// notify position each second
@@ -541,7 +572,7 @@ FootbotJacopoAPI::GetNetMessages()
     msg_data = (char *) (m_rcvMsg + sizeof(struct iphdr) + sizeof(struct udphdr) );
     int data_size = msg_size - sizeof(struct iphdr) + sizeof(struct udphdr);
     std::string str_msg(msg_data, msg_data+data_size);
-    processHello(str_msg);
+    has_msgs = processPacket(str_msg);
       
     // printf("[%d] Received %d bytes from socket %d (TTL=%d): %s\n", Steps, msg_size, recvSocket,ip->ttl,msg_data);
     //printf("%d,",65 - ip->ttl);
@@ -554,7 +585,7 @@ FootbotJacopoAPI::GetNetMessages()
     //			std::cout.flush();
     //sscanf (msg_data,"%d %*s",&mSentDataPackets);
     //printf("DECODED VALUE: %d\n",mSentDataPackets);
-    has_msgs = true;
+    //has_msgs = true;
     m_receivedPacketsAll++;
   }
 

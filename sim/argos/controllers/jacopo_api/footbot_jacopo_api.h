@@ -78,14 +78,16 @@ class FootbotJacopoAPI: public CCI_Controller
     std::string m_remoteHost;
     UInt16 m_remotePort;
     char *m_rcvMsg;
+    bool m_networkEnabled;
     void GetNetMessages();
     
     //! Communication stuff
     void initComm(TConfigurationNode& t_tree );
     //void configureComm();
     void start();
+    void stop();
     void processHello(std::string &);
-    void processPacket(std::string &);
+    bool processPacket(std::string &);
     
 
     void sendTimerFired();
